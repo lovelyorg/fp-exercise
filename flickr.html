@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+  <head></head>
+  <body>
+    <div class="search-container">
+      <input id="keyword" type="text" />
+      <button id="search">
+        search
+      </button>
+    </div>
+    <div class="search-container">
+      <input id="keyword2" type="text" />
+      <button id="search2">
+        search fp
+      </button>
+    </div>
+    <div id="imgContainer" class="img-container"></div>
+    <script src="./require.min.js"></script>
+    <script>
+      requirejs.config({
+        paths: {
+          ramda: './node_modules/ramda/dist/ramda.min',
+          jquery: './node_modules/jquery/dist/jquery.min',
+        },
+      })
+    </script>
+
+    <script>
+      require(['jquery'], function ($) {
+        async function app() {
+          $.get('http://127.0.0.1:8000/?keyword=' + $('#keyword').val(), (res) => {
+            // console.log(res)
+            let imgSrcs = res.match(
+              RegExp('<div class="item"><a class="thumb" target="_blank" href="http[^"]+.jpg', 'g')
+            )
+            imgSrcs = imgSrcs.map((m) =>
+              m.replace('<div class="item"><a class="thumb" target="_blank" href="', '')
+            )
+            // console.log(imgSrcs);
+            $('#imgContainer').html('')
+            imgSrcs.forEach((m) => {
+              let img = $('<img />', { src: m })
+              $('#imgContainer').append(img)
+            })
+          })
+        }
+
+        $('#keyword').on('keydown', (event) => {
+          if (event.keyCode === 13) app()
+        })
+        $('#search').on('click', app)
+      })
+    </script>
+
+    <script>
+      require(['ramda', 'jquery'], function (_, $) {
+        const trace = _.curry(function (tag, x) {
+          console.log(tag, x)
+          return x
+        })
+        // app goes here
+
+        /**
+         * .构造api url
+         * .从api获取数据 (不纯)
+         * .从数据中提取图片链接
+         * .创建图片元素
+         * .图片显示到屏幕 (不纯)
+         */
+        const Impure = {
+          getText: _.curry((callback, url) => {
+            $.get(url, callback)
+          }),
+          setHtml: _.curry((sel, html) => {
+            $(sel).append(html)
+          }),
+        }
+        const apiUrl = () => `http://127.0.0.1:8000/?keyword=${$('#keyword2').val()}`
+        const extractImgUrlsFromText = (text) => {
+          // console.log(text)
+          let imgSrcs = text.match(
+            RegExp('<div class="item"><a class="thumb" target="_blank" href="http[^"]+.jpg', 'g')
+          )
+          imgSrcs = imgSrcs.map((m) =>
+            m.replace('<div class="item"><a class="thumb" target="_blank" href="', '')
+          )
+          return imgSrcs
+        }
+        const urlToImg = (url) => $('<img />', { src: url })
+        const renderImg = _.map(_.compose(Impure.setHtml($('#imgContainer')), urlToImg))
+        const emptyContainer = () => $('#imgContainer').html('')
+
+        const app = _.compose(
+          Impure.getText(_.compose(renderImg, extractImgUrlsFromText)),
+          apiUrl,
+          emptyContainer
+        )
+
+        $('#keyword2').on('keydown', (event) => {
+          if (event.keyCode === 13) app()
+        })
+        $('#search2').on('click', app)
+      })
+    </script>
+  </body>
+
+  <style>
+    .search-container {
+      display: flex;
+      margin: 10px 0;
+    }
+
+    img {
+      width: 40%;
+      padding: 10px 10px 0 0;
+    }
+
+    .img-container {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: start;
+    }
+  </style>
+</html>
