@@ -1,6 +1,7 @@
-var _ = require('ramda')
+import _ from 'ramda'
+import { map } from './support/index.js'
 
-var Container = function (value) {
+const Container = function (value) {
   this.__value = value
 }
 
@@ -10,13 +11,10 @@ Container.prototype.map = function (f) {
   return Container.of(f(this.__value))
 }
 
-let c2 = Container.of(2)
+const c2 = Container.of(2)
 
 console.log(c2)
 console.log(c2.map(_.add(1)))
-
-// map :: Functor f => (a -> b) -> f a -> f b
-var map = _.curry((f, any_functor_at_all) => any_functor_at_all.map(f))
 
 console.log(map(_.add(1), c2))
 

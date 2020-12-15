@@ -1,4 +1,4 @@
-var _ = require('ramda')
+import _ from 'ramda'
 
 // 练习 1
 //==============
@@ -57,11 +57,4 @@ var slice = _.curry((start, end, ary) => ary.slice(start, end))
 // 借助 `slice` 定义一个 `take` curry 函数，该函数调用后可以取出字符串的前 n 个字符。
 var take = slice(0)
 
-module.exports = {
-  words,
-  sentences,
-  filterQs,
-  max,
-  slice,
-  take,
-}
+export { words, sentences, filterQs, max, slice, take }

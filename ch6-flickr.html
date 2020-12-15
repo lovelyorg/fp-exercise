@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+  <head></head>
+  <body>
+    <div class="search-container">
+      <input id="keyword" type="text" />
+      <button id="search">search</button>
+      <button id="search2">search fp</button>
+    </div>
+    <div id="imgContainer" class="img-container"></div>
+
+    <script src="./node_modules/requirejs/require.js"></script>
+
+    <script>
+      requirejs.config({
+        paths: {
+          ramda: './node_modules/ramda/dist/ramda.min',
+          jquery: './node_modules/jquery/dist/jquery.min',
+          support: './support/index.browser',
+        },
+      })
+    </script>
+
+    <script>
+      require(['jquery'], function ($) {
+        async function app() {
+          $('#imgContainer').html('')
+          $.get(`http://127.0.0.1:8000/?keyword=${$('#keyword').val()}`, (res) => {
+            res
+              .match(RegExp('<div class="item"><a class="thumb" target="_blank" href="http[^"]+.jpg', 'g'))
+              .map((m) => m.replace('<div class="item"><a class="thumb" target="_blank" href="', ''))
+              .forEach((m) => {
+                let img = $('<img />', { src: m })
+                $('#imgContainer').append(img)
+              })
+          })
+        }
+
+        $('#search').on('click', app)
+      })
+    </script>
+
+    <script>
+      /**
+       * .构造api url
+       * .从api获取数据 (不纯)
+       * .从数据中提取图片链接
+       * .创建图片元素
+       * .图片显示到屏幕 (不纯)
+       */
+
+      // setTimeout(() => {
+      //   if (Math.random() < 0.5) return reject('网络错误')
+      //   const res = `<div class="item"><a class="thumb" target="_blank" href="http1.jpg
+      //     <div class="item"><a class="thumb" target="_blank" href="http2.jpg
+      //       <div class="item"><a class="thumb" target="_blank" href="http3.jpg`
+      //   resolve(res)
+      // }, 200)
+
+      require(['jquery', 'ramda', 'support'], function ($, { curry, compose, map, take }, { IO, Task, trace }) {
+        // string -> {}
+        const img = (url) => $('<img />', { src: url, title: url })
+        // {} [{}] -> _
+        const ioSetHtml = curry((sel, html) => new IO(() => $(sel).append(html)))
+        // string -> {} -> Task string error
+        const getText = curry(
+          (url) =>
+            new Task((reject, resolve) => {
+              fetch(url)
+                .then((res) => res.text())
+                .then(resolve)
+                .catch(reject)
+            })
+        )
+
+        // string
+        const apiUrl = () => `http://127.0.0.1:8000/?keyword=${$('#keyword').val()}`
+        // string -> [string]
+        const imgUrls = (text) => {
+          return text
+            .match(RegExp('<div class="item"><a class="thumb" target="_blank" href="http[^"]+.jpg', 'g'))
+            .map((m) => m.replace('<div class="item"><a class="thumb" target="_blank" href="', ''))
+        }
+        // string -> [{}]
+        const imgs = compose(map(img), take(2), imgUrls)
+        // string -> IO(_)
+        const render = compose(trace('t2'), ioSetHtml($('#imgContainer')), trace('t1'), imgs)
+        //
+        const app = compose(map(render), trace('1'), getText, apiUrl)
+
+        $('#search2').on('click', () => {
+          $('#imgContainer').html('')
+          app().fork(console.error, (m) => m.unsafePerformIO())
+        })
+      })
+    </script>
+  </body>
+
+  <style>
+    .search-container {
+      display: flex;
+      margin: 10px 0;
+    }
+
+    img {
+      width: 40%;
+      padding: 10px 10px 0 0;
+    }
+
+    .img-container {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: start;
+    }
+  </style>
+</html>

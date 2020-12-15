@@ -1,5 +1,5 @@
-const E = require('./curry-ch4')
-const assert = require('assert').strict
+import E from './ch4-curry.js'
+import { strict as assert } from 'assert'
 
 // '练习1'
 assert.deepEqual(E.words('wang da'), ['wang', 'da'])

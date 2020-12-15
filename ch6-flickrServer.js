@@ -1,21 +1,24 @@
-const http = require('http')
-const https = require('https')
+import http from 'http'
+import https from 'https'
 
 const server = http.createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*')
   const keyword = RegExp('[^/?keyword=].*').exec(req.url)
   if (keyword) {
-    const rst = await httpsGet(
-      `https://cn.bing.com/images/search?q=${keyword[0]}&go=Search&qs=ds&form=QBIR`
-    )
-    res.write(rst)
+    try {
+      const rst = await httpsGet(`https://cn.bing.com/images/search?q=${keyword[0]}&go=Search&qs=ds&form=QBIR`)
+      res.write(rst)
+    } catch (e) {
+      console.error(e)
+      res.write(e.message)
+    }
   }
   res.end()
 })
 
 server.listen(8000)
 
-console.log('server on http://127.0.0.1:8000')
+console.log('server on http://127.0.0.1:8000, 直接从本地打开 ch6-flickr.html 查看效果')
 
 async function httpsGet(url) {
   return new Promise((resolve, reject) => {

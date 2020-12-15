@@ -9,8 +9,16 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "dayjs": "^1.9.6",
     "jquery": "^3.5.0",
     "ramda": "^0.27.0",
     "requirejs": "^2.3.6"
+  },
+  "type": "module",
+  "resovle": {
+    "extensions": [
+      ".js",
+      ".json"
+    ]
   }
 }
